@@ -1,0 +1,14 @@
+dist/
+*.log
+
+native/bin/
+native/obj/
+.dotnet-home/
+.dotnet/
+
+
+
+
+
+.tools/
+
