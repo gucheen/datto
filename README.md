@@ -4,8 +4,15 @@
 
 ## 项目结构
 
-- native/：WPF 应用源码和图标。
-- build/：图标生成、发布、安装与卸载脚本。
+- Datto.slnx：解决方案入口，可在仓库根目录执行 `dotnet build`。
+- src/Datto/：WPF 应用项目，App.xaml / App.xaml.cs 负责应用入口。
+  - Views/：主窗口及设置、主题切换、剪贴板交互代码。
+  - Models/：剪贴板记录 Clip 和用户设置 Preferences。
+  - Clipboard/：系统剪贴板格式读取、转换和写入。
+  - Themes/：共享控件样式，包括菜单、按钮和滚动条。
+  - Diagnostics/：内置格式回归检查，通过 `--format-test` 执行。
+  - Assets/：应用图标等资源。
+- build/：图标生成、发布和安装脚本。
 - dist/：生成的发布文件和安装包（不纳入版本控制）。
 - Start-Datto.cmd：本地调试构建的启动入口。
 
@@ -14,11 +21,11 @@
 安装 .NET 10 SDK 后：
 
 ```powershell
-dotnet build native/Datto.csproj
-dotnet run --project native/Datto.csproj
+dotnet build
+dotnet run --project src/Datto/Datto.csproj
 ```
 
-也可以直接运行构建生成的 native/bin/Debug/net10.0-windows/Datto.exe，需要 .NET 10 Desktop Runtime。
+也可以直接运行构建生成的 src/Datto/bin/Debug/net10.0-windows/Datto.exe，需要 .NET 10 Desktop Runtime。
 
 ## 使用
 
@@ -77,7 +84,7 @@ dotnet run --project native/Datto.csproj
 
 旧版自制安装器已移除；新安装器成功安装后清理旧版卸载注册项，保留用户数据和设置。卸载会移除本应用的开机启动项，但不删除历史。当前应用仍需 x64 .NET 10 Desktop Runtime；安装前检查运行时，缺少时提供官方地址。安装包尚未签名。
 
-图标源生成脚本：build/New-Icon.ps1；产物：native/Assets/Datto.ico，包含 16–256 像素多尺寸。
+图标源生成脚本：build/New-Icon.ps1；产物：src/Datto/Assets/Datto.ico，包含 16–256 像素多尺寸。
 
 
 面板切换到其他应用时自动隐藏；设置、完整预览与右键菜单保持可操作。每次唤起不默认选中卡片，点击或方向键选择后显示选中边框；未选择时 Enter 粘贴当前结果第一项。

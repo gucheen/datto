@@ -19,7 +19,7 @@ $frames = foreach ($size in @(16,24,32,48,64,128,256)) {
  [pscustomobject]@{ Size=$size; Data=$stream.ToArray() }
  $stream.Dispose(); $g.Dispose(); $bitmap.Dispose(); $brush.Dispose(); $pen.Dispose()
 }
-$out = [IO.File]::Create((Join-Path $PSScriptRoot '../native/Assets/Datto.ico'))
+$out = [IO.File]::Create((Join-Path $PSScriptRoot '../src/Datto/Assets/Datto.ico'))
 $writer = [IO.BinaryWriter]::new($out)
 $writer.Write([uint16]0); $writer.Write([uint16]1); $writer.Write([uint16]$frames.Count)
 $offset = 6 + 16 * $frames.Count

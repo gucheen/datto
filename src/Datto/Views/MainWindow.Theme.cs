@@ -32,6 +32,9 @@ public partial class MainWindow {
   Set("HeaderText", "#FFFFFF", "#FFFFFF");
   Set("Accent", "#A17018", "#F2CC7B");
   Set("Edge", "#40FFFFFF", "#405E6574");
+  Set("ScrollGrip", "#50707682", "#507F8DA3");
+  Set("ScrollGripHover", "#90707682", "#9099A8BE");
+  Set("ScrollGripActive", "#C0606978", "#C0ADBDD3");
   Set("TextHeader", "#DAA34E", "#624C2D");
   Set("LinkHeader", "#5D9DD5", "#294E70");
   UpdateTabs();

@@ -11,7 +11,7 @@ $env:DOTNET_CLI_HOME = Join-Path $root '.dotnet-home'
 $env:DOTNET_CLI_TELEMETRY_OPTOUT = '1'
 $env:MSBuildEnableWorkloadResolver = 'false'
 try {
- dotnet publish (Join-Path $root 'native/Datto.csproj') -c $Configuration --self-contained false -o $publish --disable-build-servers -p:UseSharedCompilation=false
+ dotnet publish (Join-Path $root 'src/Datto/Datto.csproj') -c $Configuration --self-contained false -o $publish --disable-build-servers -p:UseSharedCompilation=false
  if ($LASTEXITCODE -ne 0) { throw 'Publish failed.' }
  & $IsccPath "/DPublishDir=$publish" (Join-Path $PSScriptRoot 'Datto.iss')
  if ($LASTEXITCODE -ne 0) { throw 'Installer compilation failed.' }

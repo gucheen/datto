@@ -12,23 +12,6 @@ using System.Windows.Interop;
 using System.Windows.Threading;
 using Forms = System.Windows.Forms;
 namespace Datto;
-public partial class Clip {
- public Guid Id { get; set; } = Guid.NewGuid();
- public string Text { get; set; } = "";
- public bool Favorite { get; set; }
- public DateTime Created { get; set; } = DateTime.Now;
- public bool IsLink => !IsImage && !IsFiles && !IsRich && Uri.TryCreate(Text.Trim(), UriKind.Absolute, out var uri) && (uri.Scheme == "https" || uri.Scheme == "http");
- public string HeaderColor => IsLink ? "#5D9DD5" : "#DAA34E";
- public string KindLabel => IsFiles ? "文件" : IsImage ? "图片" : IsRich ? "富文本" : IsLink ? "链接" : "文本";
- public string KindGlyph => IsFiles ? "▤" : IsImage ? "▧" : IsRich ? "¶" : IsLink ? "↗" : "Aa";
- public string TimeLabel => Created.ToString("MM-dd HH:mm");
- public string FooterLabel => IsFiles ? $"{Files.Length} 个文件 / 文件夹" : IsImage ? $"PNG · {ImagePng!.Length / 1024.0:N0} KB" : IsLink && Uri.TryCreate(Text.Trim(), UriKind.Absolute, out var uri) ? uri.Host : $"{Text.Length} 个字符";
- public string FavoriteMark => Favorite ? "★" : "";
- public string Title => Text.Split('\n')[0].TrimEnd('\r');
- public string Summary => Text.Replace('\r',' ').Replace('\n',' ');
- [System.Text.Json.Serialization.JsonIgnore] public string QuickLabel { get; set; } = "";
- public string Meta => $"{(Favorite ? "★  " : "")}{(IsLink ? "链接" : "文本")}  ·  {Created:MM-dd HH:mm}";
-}
 public partial class MainWindow : Window {
  [DllImport("user32.dll")] static extern bool AddClipboardFormatListener(IntPtr hwnd);
  [DllImport("user32.dll")] static extern bool RemoveClipboardFormatListener(IntPtr hwnd);

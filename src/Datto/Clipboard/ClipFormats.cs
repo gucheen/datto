@@ -2,36 +2,11 @@ using System;
 using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Text;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Windows;
 using System.Windows.Documents;
 using System.Windows.Media.Imaging;
 namespace Datto;
-public partial class Clip {
- public string? Html { get; set; }
- public string? Rtf { get; set; }
- public string[] Files { get; set; } = Array.Empty<string>();
- public byte[]? ImagePng { get; set; }
- [JsonIgnore] public bool IsImage => ImagePng is { Length: > 0 };
- [JsonIgnore] public bool IsFiles => Files.Length > 0;
- [JsonIgnore] public bool IsRich => !IsImage && !IsFiles && (Html != null || Rtf != null);
- [JsonIgnore] public bool HasContent => IsImage || IsFiles || IsRich || !string.IsNullOrEmpty(Text);
- [JsonIgnore] public string DisplayText => IsFiles ? string.Join("\n", Files) : IsImage ? "图片" : string.IsNullOrEmpty(Text) ? "富文本内容（粘贴到支持格式的应用查看）" : Text;
- [JsonIgnore] public string Fingerprint => Convert.ToHexString(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(new { Text, Html, Rtf, Files, ImagePng })));
- [JsonIgnore] public BitmapSource? Thumbnail => ReadImage(320);
- public BitmapSource? ReadImage(int width = 0) {
-  if (!IsImage) return null;
-  try {
-   using var stream = new MemoryStream(ImagePng!);
-   var image = new BitmapImage(); image.BeginInit(); image.CacheOption = BitmapCacheOption.OnLoad; image.StreamSource = stream;
-   if (width > 0) image.DecodePixelWidth = width;
-   image.EndInit(); image.Freeze(); return image;
-  } catch (Exception e) when (e is IOException or NotSupportedException or ArgumentException or InvalidOperationException) { return null; }
- }
-}
 public static class ClipFormats {
  // Bound individual captures so a large clipboard cannot grow history without limit.
  const int MaxBytes = 20 * 1024 * 1024;
