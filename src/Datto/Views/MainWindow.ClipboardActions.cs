@@ -59,6 +59,7 @@ public partial class MainWindow {
   try { Clipboard.SetDataObject(ClipFormats.Write(item), true); last = item.Fingerprint; }
   catch (ExternalException) { Status.Text = "剪贴板暂时忙，请重试。"; return; }
   catch (Exception e) when (e is IOException or ArgumentException or NotSupportedException) { Status.Text = e.Message; return; }
+  MarkUsed(item);
   Dismiss();
   if (!SetForegroundWindow(target)) { Reveal(); Status.Text = "无法激活目标窗口；内容已复制，请手动粘贴。"; return; }
   int ticks = 0;

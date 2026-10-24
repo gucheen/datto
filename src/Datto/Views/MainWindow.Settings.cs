@@ -19,7 +19,7 @@ public partial class MainWindow {
   if (!smoke) try { var saved = JsonSerializer.Deserialize<Preferences>(File.ReadAllText(preferencesFile)); if (saved?.Valid == true) preferences = saved; } catch (Exception e) when (e is IOException or JsonException or UnauthorizedAccessException) { }
   ShortcutHint.Text = preferences.Shortcut;
  }
- void TrimHistory() { clips = clips.Where(x => x.Favorite).Concat(clips.Where(x => !x.Favorite).OrderByDescending(x => x.Created).Take(preferences.HistoryLimit)).OrderByDescending(x => x.Created).ToList(); }
+ void TrimHistory() { clips = clips.Where(x => x.Favorite).Concat(clips.Where(x => !x.Favorite).OrderByDescending(x => x.RecentActivity).Take(preferences.HistoryLimit)).OrderByDescending(x => x.RecentActivity).ToList(); }
  void SettingsClick(object sender, RoutedEventArgs e) => OpenSettings();
  public void OpenSettings() {
   if (settingsWindow != null) { settingsWindow.Activate(); return; }

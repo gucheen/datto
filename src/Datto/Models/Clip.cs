@@ -10,6 +10,8 @@ public class Clip {
  public string Text { get; set; } = "";
  public bool Favorite { get; set; }
  public DateTime Created { get; set; } = DateTime.Now;
+ public DateTime? LastUsed { get; set; }
+ [JsonIgnore] public DateTime RecentActivity => LastUsed ?? Created;
  public bool IsLink => !IsImage && !IsFiles && !IsRich && Uri.TryCreate(Text.Trim(), UriKind.Absolute, out var uri) && (uri.Scheme == "https" || uri.Scheme == "http");
  public string HeaderColor => IsLink ? "#5D9DD5" : "#DAA34E";
  public string KindLabel => IsFiles ? "文件" : IsImage ? "图片" : IsRich ? "富文本" : IsLink ? "链接" : "文本";

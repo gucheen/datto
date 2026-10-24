@@ -134,7 +134,7 @@ public partial class MainWindow : Window {
    var existing = clips.FirstOrDefault(x => x.Fingerprint == key);
    if (existing != null) { clips.Remove(existing); item.Favorite = existing.Favorite; item.Id = existing.Id; }
    clips.Insert(0, item);
-   clips = clips.Where(x => x.Favorite).Concat(clips.Where(x => !x.Favorite).Take(preferences.HistoryLimit)).OrderByDescending(x => x.Created).ToList();
+   TrimHistory();
    Save(); Refresh();
   } catch (ExternalException) { if (++attempts <= 5) retry.Start(); else Status.Text = "剪贴板暂时忙，未能读取这条内容。"; }
   catch (Exception e) when (e is IOException or NotSupportedException or ArgumentException or InvalidOperationException) { Status.Text = "未收录：" + e.Message; }
@@ -148,7 +148,7 @@ public partial class MainWindow : Window {
   var id = (History.SelectedItem as Clip)?.Id;
   var query = Search.Text;
   var rows = clips.Where(x => (filter == "all" || (filter == "favorite" ? x.Favorite : filter == "link" ? x.IsLink : !x.IsLink)) && (x.DisplayText + " " + x.KindLabel).Contains(query, StringComparison.OrdinalIgnoreCase));
-  var result = rows.OrderByDescending(x => x.Created).ToList();
+  var result = rows.OrderByDescending(x => x.RecentActivity).ToList();
   for (int i = 0; i < result.Count; i++) result[i].QuickLabel = i < 9 ? $"Ctrl {i + 1}" : "";
   History.ItemsSource = result;
   History.SelectedItem = result.FirstOrDefault(x => x.Id == id);
@@ -163,9 +163,15 @@ public partial class MainWindow : Window {
   Refresh();
  }
  void CopyClick(object sender, RoutedEventArgs e) => Copy();
+ void MarkUsed(Clip item) {
+  item.LastUsed = DateTime.Now;
+  clips.Remove(item);
+  clips.Insert(0, item);
+  Save(); Refresh();
+ }
  void Copy() {
   if ((History.SelectedItem ?? History.Items.Cast<Clip>().FirstOrDefault()) is not Clip item) return;
-  try { Clipboard.SetDataObject(ClipFormats.Write(item), true); last = item.Fingerprint; Status.Text = "已复制，切回目标应用即可粘贴。"; Dismiss(); }
+  try { Clipboard.SetDataObject(ClipFormats.Write(item), true); last = item.Fingerprint; Status.Text = "已复制，切回目标应用即可粘贴。"; MarkUsed(item); Dismiss(); }
   catch (ExternalException) { Status.Text = "剪贴板暂时忙，请再试一次。"; }
   catch (Exception e) when (e is IOException or ArgumentException or NotSupportedException) { Status.Text = e.Message; }
  }
