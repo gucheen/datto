@@ -1,4 +1,4 @@
-#define AppVersion "0.1.3"
+#define AppVersion "0.1.4"
 #ifndef PublishDir
 #define PublishDir "..\dist\publish"
 #endif

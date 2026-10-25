@@ -33,10 +33,33 @@ public static class FormatChecks {
   try { ClipFormats.Write(new Clip { Files = new[] { Path.Combine(AppContext.BaseDirectory, Guid.NewGuid().ToString()) } }); } catch (InvalidDataException) { missingRejected = true; }
   Check(missingRejected, "Missing files must be rejected");
   Check(ClipFormats.Read(new DataObject()) == null, "Empty clipboard");
+  foreach (var marker in new[] { "Clipboard Viewer Ignore", "ExcludeClipboardContentFromMonitorProcessing" }) {
+   foreach (var payload in new[] { new DataObject(DataFormats.UnicodeText, "temporary selection"), ClipFormats.Write(image), ClipFormats.Write(files) }) {
+    payload.SetData(marker, new MemoryStream(new byte[] { 0 }), false);
+    Check(ClipFormats.Read(payload) == null, marker + " excludes all content types regardless of marker value");
+   }
+  }
+  foreach (var value in new object[] { 0, 0u, new byte[4], new MemoryStream(new byte[4]) }) {
+   var ignored = new DataObject(DataFormats.UnicodeText, "private text");
+   ignored.SetData("CanIncludeInClipboardHistory", value, false);
+   Check(ClipFormats.Read(ignored) == null, "Zero history DWORD excludes capture: " + value.GetType().Name);
+  }
+  foreach (var value in new object[] { 1, 1u, new byte[] { 1, 0, 0, 0 }, new MemoryStream(new byte[] { 1, 0, 0, 0 }), new byte[3], "0" }) {
+   var allowed = new DataObject(DataFormats.UnicodeText, "normal text");
+   allowed.SetData("CanIncludeInClipboardHistory", value, false);
+   Check(ClipFormats.Read(allowed)?.Text == "normal text", "Nonzero or malformed history flag does not exclude capture");
+  }
+  var positionedStream = new MemoryStream(new byte[4]); positionedStream.Position = 2;
+  var positionedData = new DataObject(DataFormats.UnicodeText, "private text");
+  positionedData.SetData("CanIncludeInClipboardHistory", positionedStream, false);
+  Check(ClipFormats.Read(positionedData) == null && positionedStream.Position == 2, "History DWORD read preserves stream position");
+  var cloudOnly = new DataObject(DataFormats.UnicodeText, "local history allowed");
+  cloudOnly.SetData("CanUploadToCloudClipboard", new MemoryStream(new byte[4]), false);
+  Check(ClipFormats.Read(cloudOnly)?.Text == "local history allowed", "Cloud-only opt-out allows local history");
   var oversized = new DataObject(); oversized.SetText(new string('a',21*1024*1024));
   bool sizeRejected = false;
   try { ClipFormats.Read(oversized); } catch (InvalidDataException) { sizeRejected = true; }
   Check(sizeRejected, "Oversized capture");
-  Console.WriteLine("FORMATS_OK: legacy history, rich text, PNG persistence, file/folder round trips, deduplication and invalid inputs");
+  Console.WriteLine("FORMATS_OK: legacy history, rich text, PNG persistence, file/folder round trips, deduplication, ignore markers and invalid inputs");
  }
 }

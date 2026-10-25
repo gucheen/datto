@@ -64,6 +64,7 @@ dotnet run --project src/Datto/Datto.csproj
 
 - 浮层右上角、托盘菜单或设置中的暂停按钮可停止 / 恢复监听。暂停仅影响采集，现有记录仍可使用；恢复后只收录新复制的内容，不补录暂停期间内容。暂停状态本次运行有效，重启恢复监听。
 - 设置中按行填写排除应用进程名（例如 KeePass.exe），保存生效。忽略大小写和 .exe 后缀。按剪贴板所有者进程判断；有排除规则且来源无法识别时不采集。规则不追溯删除历史。
+- 自动尊重剪贴板忽略标记：包含 `Clipboard Viewer Ignore`、`ExcludeClipboardContentFromMonitorProcessing`，或 `CanIncludeInClipboardHistory` 的 DWORD 值为 0 时，不读取内容或保存历史。适用于主动提供标记的临时取词、密码管理等软件；未提供标记的模拟复制无法据此识别。仅含 `CanUploadToCloudClipboard=0`（禁止云同步）仍可保存本地历史。
 - 设置中“清空历史”默认保留收藏，可取消勾选以同时删除收藏。删除前确认，系统剪贴板内容不变。
 - 在目标应用中用全局快捷键唤起面板，Ctrl+1–9（含数字小键盘）将当前搜索 / 筛选结果的第 1–9 项复制、收起面板并向原应用发送 Ctrl+V。数字角标标识对应项。不足九项时无效编号无操作。
 - 自动粘贴等待修饰键释放；目标窗口失效、焦点改变时取消。向管理员权限应用发送按键可能被 Windows 拒绝，此时可手动 Ctrl+V。应用内不接受粘贴的控件不会因此变得可粘贴。
@@ -78,7 +79,7 @@ dotnet run --project src/Datto/Datto.csproj
 ./build/Build-Installer.ps1
 ```
 
-输出 dist/Datto-Setup-0.1.3-x64.exe。构建需要 Windows、.NET 10 SDK、Inno Setup 6.5+。从 https://jrsoftware.org/isdl.php 安装 Inno Setup，也可使用 -IsccPath 指定 ISCC.exe。
+输出 dist/Datto-Setup-0.1.4-x64.exe。构建需要 Windows、.NET 10 SDK、Inno Setup 6.5+。从 https://jrsoftware.org/isdl.php 安装 Inno Setup，也可使用 -IsccPath 指定 ISCC.exe。
 
 安装器使用 Inno Setup 标准安装向导，支持安装目录选择、开始菜单、可选桌面快捷方式、覆盖升级和系统卸载。默认按当前用户安装至 %LOCALAPPDATA%/Programs/Datto，无需管理员权限。安装完成后默认勾选启动并驻留托盘，可取消勾选。使用固定 AppId 识别后续升级。
 

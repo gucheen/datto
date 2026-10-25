@@ -1,4 +1,5 @@
 using System;
+using System.Buffers.Binary;
 using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
@@ -10,7 +11,31 @@ namespace Datto;
 public static class ClipFormats {
  // Bound individual captures so a large clipboard cannot grow history without limit.
  const int MaxBytes = 20 * 1024 * 1024;
+ public static bool ShouldIgnore(IDataObject data) {
+  // Presence alone opts out, regardless of the marker's payload.
+  if (data.GetDataPresent("Clipboard Viewer Ignore", false) ||
+      data.GetDataPresent("ExcludeClipboardContentFromMonitorProcessing", false)) return true;
+  const string historyFormat = "CanIncludeInClipboardHistory";
+  if (!data.GetDataPresent(historyFormat, false)) return false;
+  // Windows specifies a little-endian DWORD; WPF exposes native data as a stream.
+  var value = data.GetData(historyFormat, false);
+  if (value is uint unsigned) return unsigned == 0;
+  if (value is int signed) return signed == 0;
+  if (value is byte[] bytes) return bytes.Length >= 4 && BinaryPrimitives.ReadUInt32LittleEndian(bytes) == 0;
+  if (value is Stream stream) {
+   long position = stream.CanSeek ? stream.Position : 0;
+   try {
+    if (stream.CanSeek) stream.Position = 0;
+    Span<byte> buffer = stackalloc byte[4];
+    return stream.ReadAtLeast(buffer, 4, throwOnEndOfStream: false) == 4 && BinaryPrimitives.ReadUInt32LittleEndian(buffer) == 0;
+   } finally {
+    if (stream.CanSeek) stream.Position = position;
+   }
+  }
+  return false;
+ }
  public static Clip? Read(IDataObject data) {
+  if (ShouldIgnore(data)) return null;
   var clip = new Clip();
   if (data.GetDataPresent(DataFormats.FileDrop) && data.GetData(DataFormats.FileDrop) is string[] paths) {
    clip.Files = paths.Where(x => !string.IsNullOrWhiteSpace(x)).ToArray();
