@@ -11,6 +11,10 @@ public class Clip {
  public bool Favorite { get; set; }
  public DateTime Created { get; set; } = DateTime.Now;
  public DateTime? LastUsed { get; set; }
+ public string? SourceApp { get; set; }
+ public byte[]? SourceIconPng { get; set; }
+ [JsonIgnore] public string SourceLabel => string.IsNullOrWhiteSpace(SourceApp) ? "来源应用未知" : "复制自 " + SourceApp;
+ [JsonIgnore] public BitmapSource? SourceIcon => DecodeImage(SourceIconPng, 32);
  [JsonIgnore] public DateTime RecentActivity => LastUsed ?? Created;
  public bool IsLink => !IsImage && !IsFiles && !IsRich && Uri.TryCreate(Text.Trim(), UriKind.Absolute, out var uri) && (uri.Scheme == "https" || uri.Scheme == "http");
  public string HeaderColor => IsLink ? "#5D9DD5" : "#DAA34E";
@@ -36,9 +40,12 @@ public class Clip {
  [JsonIgnore] public string Fingerprint => Convert.ToHexString(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(new { Text, Html, Rtf, Files, ImagePng })));
  [JsonIgnore] public BitmapSource? Thumbnail => ReadImage(320);
  public BitmapSource? ReadImage(int width = 0) {
-  if (!IsImage) return null;
+  return DecodeImage(ImagePng, width);
+ }
+ static BitmapSource? DecodeImage(byte[]? bytes, int width) {
+  if (bytes is not { Length: > 0 }) return null;
   try {
-   using var stream = new MemoryStream(ImagePng!);
+   using var stream = new MemoryStream(bytes);
    var image = new BitmapImage(); image.BeginInit(); image.CacheOption = BitmapCacheOption.OnLoad; image.StreamSource = stream;
    if (width > 0) image.DecodePixelWidth = width;
    image.EndInit(); image.Freeze(); return image;

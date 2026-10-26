@@ -37,6 +37,7 @@ public partial class MainWindow : Window {
     if (smoke) {
    var sample = new DataObject(); sample.SetImage(System.Windows.Media.Imaging.BitmapSource.Create(2, 1, 96, 96, System.Windows.Media.PixelFormats.Bgra32, null, new byte[] { 70,160,220,255, 180,130,70,255 }, 8));
    clips = new List<Clip> { ClipFormats.Read(sample)!, new() { Files = new[] { @"C:\Examples\report.pdf", @"C:\Examples\photo.jpg" } }, new() { Text = "富文本预览 · 保留 HTML / RTF 格式", Html = "<b>富文本预览</b>" }, new() { Text = "Startup regression test", Favorite = true }, new() { Text = "https://example.com" } };
+   ClipboardSource.Apply(clips[0], (uint)Environment.ProcessId);
   }
   Refresh();
   retry.Tick += (_,_) => { retry.Stop(); Capture(); };
@@ -124,12 +125,14 @@ public partial class MainWindow : Window {
  void Capture() {
   if (SkipCapture()) { retry.Stop(); return; }
   try {
+   GetWindowThreadProcessId(GetClipboardOwner(), out uint sourceProcessId);
    var data = Clipboard.GetDataObject();
    if (data == null) return;
    var item = ClipFormats.Read(data);
    if (item == null) { last = ""; return; }
    var key = item.Fingerprint;
    if (key == last) return;
+   ClipboardSource.Apply(item, sourceProcessId);
    last = key;
    var existing = clips.FirstOrDefault(x => x.Fingerprint == key);
    if (existing != null) { clips.Remove(existing); item.Favorite = existing.Favorite; item.Id = existing.Id; }

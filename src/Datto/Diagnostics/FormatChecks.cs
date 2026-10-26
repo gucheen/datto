@@ -10,6 +10,16 @@ public static class FormatChecks {
   void Check(bool ok, string message) { if (!ok) throw new InvalidOperationException(message); }
   var old = JsonSerializer.Deserialize<Clip>("{\"Text\":\"old history\",\"Favorite\":true}")!;
   Check(old.HasContent && old.Favorite && old.KindLabel == "文本", "Legacy history");
+  Check(old.SourceIcon == null && old.SourceLabel == "来源应用未知", "Legacy source fallback");
+  var sourced = new Clip { Text = "source metadata" };
+  ClipboardSource.Apply(sourced, (uint)Environment.ProcessId);
+  Check(!string.IsNullOrWhiteSpace(sourced.SourceApp) && sourced.SourceIcon is { PixelWidth: 32 }, "Capture process name and executable icon");
+  var sourcedCopy = JsonSerializer.Deserialize<Clip>(JsonSerializer.Serialize(sourced))!;
+  Check(sourcedCopy.SourceApp == sourced.SourceApp && sourcedCopy.SourceIcon is { PixelWidth: 32 }, "Source metadata survives history reload");
+  Check(sourcedCopy.Fingerprint == new Clip { Text = sourced.Text }.Fingerprint, "Source metadata must not change content deduplication");
+  ClipboardSource.Apply(sourcedCopy, 0);
+  Check(sourcedCopy.SourceApp == sourced.SourceApp, "Unknown process is safe");
+  Check(new Clip { SourceIconPng = new byte[] { 1, 2, 3 } }.SourceIcon == null, "Invalid source icon fallback");
   var rich = new Clip { Text = "hello", Html = "<b>hello</b>", Rtf = @"{\rtf1\ansi hello}" };
   var richCopy = ClipFormats.Read(ClipFormats.Write(rich))!;
   Check(richCopy.Html == rich.Html && richCopy.Rtf == rich.Rtf && richCopy.Text == rich.Text, "Rich text round trip");
@@ -60,6 +70,6 @@ public static class FormatChecks {
   bool sizeRejected = false;
   try { ClipFormats.Read(oversized); } catch (InvalidDataException) { sizeRejected = true; }
   Check(sizeRejected, "Oversized capture");
-  Console.WriteLine("FORMATS_OK: legacy history, rich text, PNG persistence, file/folder round trips, deduplication, ignore markers and invalid inputs");
+  Console.WriteLine("FORMATS_OK: legacy history, source icons, rich text, PNG persistence, file/folder round trips, deduplication, ignore markers and invalid inputs");
  }
 }
